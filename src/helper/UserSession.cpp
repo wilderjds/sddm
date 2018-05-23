@@ -155,11 +155,18 @@ namespace SDDM {
         //we want to redirect after we setuid so that the log file is owned by the user
 
         // determine stderr log file based on session type
-        QString sessionLog = QStringLiteral("%1/%2")
+        QString sessionLog = (sessionType == QLatin1String("x11")
+                               ? mainConfig.X11.SessionLogFile.get()
+                               : mainConfig.Wayland.SessionLogFile.get());
+
+        if (!sessionLog.startsWith(QStringLiteral("/"))) {
+            // If sessionLog start with a '/' then treat it as an absolute path
+            // Otherwise treat it as a relative path
+            QString tmp = QStringLiteral("%1/%2")
                 .arg(QString::fromLocal8Bit(pw.pw_dir))
-                .arg(sessionType == QLatin1String("x11")
-                     ? mainConfig.X11.SessionLogFile.get()
-                     : mainConfig.Wayland.SessionLogFile.get());
+                .arg(sessionLog);
+            sessionLog = tmp;
+        }
 
         // create the path
         QFileInfo finfo(sessionLog);
